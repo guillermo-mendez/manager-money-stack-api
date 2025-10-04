@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS tarea_etiquetas;
+DROP TABLE IF EXISTS etiquetas;
+DROP TABLE IF EXISTS tareas;
+DROP TABLE IF EXISTS categorias;
+DROP TABLE IF EXISTS prioridades;
+DROP TABLE IF EXISTS usuarios;
