@@ -2,7 +2,7 @@ import database from "../../database/connection";
 import {CreateCategory, UpdateCategory} from "../../entities/Categories";
 
 
-class CategoriesRepository {
+class DebtsRepository {
 
   /**
    * Obtiene las categorias del usuario autenticado
@@ -88,4 +88,4 @@ class CategoriesRepository {
 
 }
 
-export default new CategoriesRepository();
+export default new DebtsRepository();

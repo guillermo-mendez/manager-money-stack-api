@@ -1,69 +1,109 @@
+-- =========================
+-- Extensiones
+-- =========================
+CREATE EXTENSION IF NOT EXISTS pgcrypto;   -- gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS citext;     -- emails case-insensitive
+
+
+-- =========================
+-- Estados
+-- =========================
+CREATE TABLE IF NOT EXISTS status (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name       VARCHAR(100) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ NULL,
+    CONSTRAINT uq_status_name UNIQUE (name),
+    CONSTRAINT status_name_not_blank CHECK (btrim(name) <> '')
+    );
+
+-- =========================
 -- Usuarios
-CREATE TABLE IF NOT EXISTS usuarios (
-    id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-- =========================
+CREATE TABLE IF NOT EXISTS users (
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name          TEXT NOT NULL,
     email         TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at    TIMESTAMPTZ NULL
-    );
-
--- Categorías
-CREATE TABLE IF NOT EXISTS categorias (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id     UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-    name        TEXT NOT NULL,
-    color_hex   TEXT,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    status_id     UUID REFERENCES status(id) ON DELETE SET NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     deleted_at    TIMESTAMPTZ NULL,
-    UNIQUE (user_id, name)
+    CONSTRAINT users_name_not_blank CHECK (btrim(name) <> ''),
+    CONSTRAINT users_email_not_blank CHECK (btrim(email) <> '')
     );
 
--- Prioridades
-CREATE TABLE IF NOT EXISTS prioridades (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name        TEXT NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at    TIMESTAMPTZ NULL
+-- =========================
+-- Deudas
+-- =========================
+CREATE TABLE IF NOT EXISTS debts (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    creditor_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- quien presta
+    debtor_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- quien debe
+    amount       NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+    currency     CHAR(3) NOT NULL DEFAULT 'COP',
+    description  TEXT,
+    due_date     DATE,              -- fecha límite de pago
+    paid_at      TIMESTAMPTZ,       -- cuándo quedó completamente pagada
+    status_id    UUID REFERENCES status(id) ON DELETE SET NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at   TIMESTAMPTZ NULL,
+    CONSTRAINT debts_party_diff CHECK (creditor_id <> debtor_id)
     );
 
-
-CREATE TABLE IF NOT EXISTS tareas (
-                                      id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id          UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-    categoria_id      UUID REFERENCES categorias(id) ON DELETE SET NULL,
-    prioridad_id      UUID REFERENCES prioridades(id) ON DELETE SET NULL,
-    titulo            TEXT NOT NULL,
-    descripcion       TEXT,
-    completada        BOOLEAN NOT NULL DEFAULT FALSE,
-    fecha_vencimiento DATE,
-    completada_at     TIMESTAMPTZ NULL,
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at    TIMESTAMPTZ NULL
-    );
-
-
--- Etiquetas
-CREATE TABLE IF NOT EXISTS etiquetas (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id   UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-    name      TEXT NOT NULL,
-    color_hex   TEXT,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at    TIMESTAMPTZ NULL,
-    UNIQUE (user_id, name)
-    );
-
--- MM
-CREATE TABLE IF NOT EXISTS tarea_etiquetas (
-    tarea_id    UUID NOT NULL REFERENCES tareas(id) ON DELETE CASCADE,
-    etiqueta_id UUID NOT NULL REFERENCES etiquetas(id) ON DELETE CASCADE,
-    PRIMARY KEY (tarea_id, etiqueta_id)
+-- =========================
+-- Pagos (abonos parciales o total)
+-- =========================
+CREATE TABLE IF NOT EXISTS payments (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    debt_id    UUID NOT NULL REFERENCES debts(id) ON DELETE CASCADE,
+    payer_id   UUID        REFERENCES users(id) ON DELETE SET NULL, -- quien hizo el abono
+    amount     NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+    note       TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at   TIMESTAMPTZ NULL
     );
 
 
+-- =========================
+-- Función para updated_at
+-- =========================
+-- Función genérica para actualizar updated_at en cada UPDATE
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at := now();
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+   -- status
+DROP TRIGGER IF EXISTS trg_status_updated_at ON status;
+CREATE TRIGGER trg_status_updated_at
+    BEFORE UPDATE ON status
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
+
+-- users
+DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
+CREATE TRIGGER trg_users_updated_at
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
+
+-- debts
+DROP TRIGGER IF EXISTS trg_debts_updated_at ON debts;
+CREATE TRIGGER trg_debts_updated_at
+    BEFORE UPDATE ON debts
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
+
+-- payments
+DROP TRIGGER IF EXISTS trg_payments_updated_at ON payments;
+CREATE TRIGGER trg_payments_updated_at
+    BEFORE UPDATE ON payments
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();

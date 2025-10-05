@@ -1,8 +1,8 @@
 import {Request, Response} from 'express';
-import categoriesService from "../services/CategoriesService";
+import debtsService from "../services/DebtsService";
 import validation from '../../validators/CategoriesValidator';
 
-class CategoriesController {
+class DebtsController {
   /**
    * Obtener todas las categorias del usuario autenticado
    * @param req
@@ -13,7 +13,7 @@ class CategoriesController {
     if (!user) {
       return res.status(401).json({message: 'No autorizado'});
     }
-    const result = await categoriesService.getCategories(user);
+    const result = await debtsService.getCategories(user);
     return res.json(result);
   }
 
@@ -25,7 +25,7 @@ class CategoriesController {
   async createCategory(req: Request, res: Response): Promise<Response> {
     validation.createCategoryValidation(req.body);
     const userId = req.user?.userId;
-    const result = await categoriesService.createCategory(req.body, userId);
+    const result = await debtsService.createCategory(req.body, userId);
     return res.json(result);
   }
 
@@ -38,7 +38,7 @@ class CategoriesController {
     const categoryId = req.params.id;
     validation.updateTaskValidation({...req.body,categoryId});
     const userId = req.user?.userId;
-    const result = await categoriesService.updateCategory(req.body, categoryId, userId);
+    const result = await debtsService.updateCategory(req.body, categoryId, userId);
     return res.json(result);
   }
 
@@ -51,10 +51,10 @@ class CategoriesController {
     const categoryId = req.params.id;
     validation.deleteTaskValidation({categoryId});
     const userId = req.user?.userId;
-    const result = await categoriesService.deleteCategory(categoryId, userId);
+    const result = await debtsService.deleteCategory(categoryId, userId);
     return res.json(result);
   }
 
 }
 
-export default new CategoriesController();
+export default new DebtsController();

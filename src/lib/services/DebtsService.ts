@@ -1,10 +1,10 @@
 import {ResultService} from "../../entities/Result-service";
 import {errorHandler, responseHandler} from 'error-handler-express-ts';
-import categoriesRepository from '../repositories/CategoriesRepository';
+import debtsRepository from '../repositories/DebtsRepository';
 import {UserAuth} from "../../entities/Authentication";
 import {CreateCategory, UpdateCategory} from "../../entities/Categories";
 
-class CategoriesService {
+class DebtsService {
   /**
    * Get categories for the authenticated user
    * @param user
@@ -13,7 +13,7 @@ class CategoriesService {
     try {
       const userId = user.userId;
 
-      const tasks = await categoriesRepository.getCategories(userId);
+      const tasks = await debtsRepository.getCategories(userId);
 
       return responseHandler(tasks);
 
@@ -30,8 +30,8 @@ class CategoriesService {
   async createCategory(data:CreateCategory, userId: string): Promise<ResultService> {
     try {
 
-      await categoriesRepository.createCategory(data,userId);
-      const tasks = await categoriesRepository.getCategories(userId);
+      await debtsRepository.createCategory(data,userId);
+      const tasks = await debtsRepository.getCategories(userId);
 
         return responseHandler(tasks);
 
@@ -50,8 +50,8 @@ class CategoriesService {
   async updateCategory(data:UpdateCategory, categoryId:string, userId: string): Promise<ResultService> {
     try {
 
-      await categoriesRepository.updateCategory(data,categoryId,userId);
-      const tasks = await categoriesRepository.getCategories(userId);
+      await debtsRepository.updateCategory(data,categoryId,userId);
+      const tasks = await debtsRepository.getCategories(userId);
 
       return responseHandler(tasks);
 
@@ -69,8 +69,8 @@ class CategoriesService {
   async deleteCategory(categoryId:string, userId: string): Promise<ResultService> {
     try {
 
-      await categoriesRepository.deleteCategory(categoryId,userId);
-      const tasks = await categoriesRepository.getCategories(userId);
+      await debtsRepository.deleteCategory(categoryId,userId);
+      const tasks = await debtsRepository.getCategories(userId);
 
       return responseHandler(tasks);
 
@@ -82,4 +82,4 @@ class CategoriesService {
 
 }
 
-export default new CategoriesService();
+export default new DebtsService();
