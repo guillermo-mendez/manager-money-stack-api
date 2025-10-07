@@ -1,21 +1,26 @@
 import {ResultService} from "../../entities/Result-service";
 import {errorHandler, responseHandler} from 'error-handler-express-ts';
 import debtsRepository from '../repositories/DebtsRepository';
-import {UserAuth} from "../../entities/Authentication";
-import {CreateCategory, UpdateCategory} from "../../entities/Categories";
+import {CreateDebt, UpdateDebt} from "../../entities/Debt";
+
 
 class DebtsService {
   /**
-   * Get categories for the authenticated user
-   * @param user
+   * Get deudas
    */
-  async getCategories(user: UserAuth): Promise<ResultService> {
+  async getDebts(): Promise<ResultService> {
     try {
-      const userId = user.userId;
+      const debts = await debtsRepository.getDebts();
+      const payments = await debtsRepository.getPayments();
+      const debtsWithPayments = debts.map(debt => {
+        const debtPayments = payments.filter(payment => payment.debtId === debt.debtId);
+        return {
+          ...debt,
+          payments: debtPayments
+        };
+      });
 
-      const tasks = await debtsRepository.getCategories(userId);
-
-      return responseHandler(tasks);
+      return responseHandler(debtsWithPayments);
 
     } catch (err) {
       throw new errorHandler().error(err).method('getCategories').debug().build();
@@ -23,56 +28,73 @@ class DebtsService {
   }
 
   /**
-   * Método para crear una nueva categoria.
+   * Get deuda por usuario
+   */
+  async getDebtByUser(userId: string): Promise<ResultService> {
+    try {
+      const debts = await debtsRepository.getDebtByUser(userId);
+      const debtsIds = debts.map(debt => debt.debtId);
+      const payments = await debtsRepository.getPaymentsByDebtId(debtsIds);
+      const debtsWithPayments = debts.map(debt => {
+        const debtPayments = payments.filter(payment => payment.debtId === debt.debtId);
+        return {
+          ...debt,
+          payments: debtPayments
+        };
+      });
+
+      return responseHandler(debtsWithPayments);
+
+    } catch (err) {
+      throw new errorHandler().error(err).method('getDebtByUser').debug().build();
+    }
+  }
+
+  /**
+   * Método para crear una nueva deuda.
    * @param data<CreateTask>
    * @param userId
    */
-  async createCategory(data:CreateCategory, userId: string): Promise<ResultService> {
+  async createDebt(data: CreateDebt, userId: string): Promise<ResultService> {
     try {
 
-      await debtsRepository.createCategory(data,userId);
-      const tasks = await debtsRepository.getCategories(userId);
+      await debtsRepository.createDebt(data, userId);
 
-        return responseHandler(tasks);
+      return responseHandler({message: 'Debt created successfully'});
 
 
     } catch (err) {
-      throw new errorHandler().error(err).method('createCategory').debug().build();
+      throw new errorHandler().error(err).method('CreateDebt').debug().build();
     }
   }
 
   /**
-   * Método para actualizar una categoria.
-   * @param data<UpdateCategory>
-   * @param categoryId
-   * @param userId
+   * Método para actualizar una deuda.
+   * @param data<UpdateDebt>
+   * @param debtId
    */
-  async updateCategory(data:UpdateCategory, categoryId:string, userId: string): Promise<ResultService> {
+  async updateDebt(data: UpdateDebt, debtId: string): Promise<ResultService> {
     try {
 
-      await debtsRepository.updateCategory(data,categoryId,userId);
-      const tasks = await debtsRepository.getCategories(userId);
+      await debtsRepository.updateDebt(data, debtId);
 
-      return responseHandler(tasks);
-
+      return responseHandler({message: 'Debt updated successfully'});
 
     } catch (err) {
-      throw new errorHandler().error(err).method('updateCategory').debug().build();
+      throw new errorHandler().error(err).method('updateDebt').debug().build();
     }
   }
 
   /**
-   * Método para eliminar una categoria.
-   * @param categoryId
-   * @param userId
+   * Método para eliminar una deuda.
+   * @param debtId
    */
-  async deleteCategory(categoryId:string, userId: string): Promise<ResultService> {
+  async deleteDebt(debtId: string): Promise<ResultService> {
     try {
 
-      await debtsRepository.deleteCategory(categoryId,userId);
-      const tasks = await debtsRepository.getCategories(userId);
+      await debtsRepository.deleteDebt(debtId);
 
-      return responseHandler(tasks);
+      return responseHandler({message: 'Debt deleted successfully'});
 
 
     } catch (err) {

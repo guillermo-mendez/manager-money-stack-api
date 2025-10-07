@@ -1,5 +1,6 @@
 import database from "../../database/connection";
 import {UserRegistration, UserRow} from "../../entities/Authentication";
+import {STATUS} from "../../constants";
 
 
 class UserRepository {
@@ -36,9 +37,8 @@ class UserRepository {
     const query = `INSERT INTO users (name, email, password_hash, status_id)
                    SELECT $1, $2, $3, s.id
                    FROM status s
-                   WHERE s.name = 'PENDING' RETURNING id, name, email, created_at;`;
-
-    await database.query<UserRow>(query, [data.name, data.email.trim(), data.password]);
+                   WHERE s.name = $4 RETURNING id, name, email, created_at;`;
+    await database.query<UserRow>(query, [data.name, data.email.trim(), data.password, STATUS.ACTIVE]);
   }
 
   /**
@@ -51,7 +51,7 @@ class UserRepository {
         SELECT U.id            AS "userId",
                U.name          AS "name",
                U.email         AS "email"               
-        FROM usuarios U
+        FROM users U
         WHERE U.deleted_at IS NULL
           AND LOWER(U.email) = LOWER($1) LIMIT 1;
     `;

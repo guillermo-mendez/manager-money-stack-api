@@ -17,7 +17,7 @@ class AuthRepository {
             U.name          AS "name",
             U.email         AS "email",
             U.password_hash AS "passwordHash"
-        FROM usuarios U
+        FROM users U
         WHERE U.deleted_at IS NULL
           AND LOWER(U.email) = LOWER($1)
             LIMIT 1;
@@ -48,7 +48,7 @@ class AuthRepository {
         SELECT U.id            AS "userId",
                U.name          AS "name",
                U.email         AS "email"               
-        FROM usuarios U
+        FROM users U
         WHERE U.deleted_at IS NULL
           AND LOWER(U.email) = LOWER($1) LIMIT 1;
     `;

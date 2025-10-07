@@ -1,57 +1,63 @@
 import {Request, Response} from 'express';
 import debtsService from "../services/DebtsService";
-import validation from '../../validators/CategoriesValidator';
+import validation from '../../validators/DebtsValidator';
 
 class DebtsController {
   /**
-   * Obtener todas las categorias del usuario autenticado
+   * Obtener todas las deudas
    * @param req
    * @param res
    */
-  async getCategories(req: Request, res: Response): Promise<Response> {
-    const user = req.user;
-    if (!user) {
-      return res.status(401).json({message: 'No autorizado'});
-    }
-    const result = await debtsService.getCategories(user);
+  async getDebts(req: Request, res: Response): Promise<Response> {
+    const result = await debtsService.getDebts();
+    return res.json(result);
+  }
+
+ /**
+   * Obtener deuda por usuario
+   * @param req
+   * @param res
+   */
+  async getDebtByUser(req: Request, res: Response): Promise<Response> {
+    validation.getDebtByUserValidation(req.params);
+    const userId = req.params.userId;
+    const result = await debtsService.getDebtByUser(userId);
     return res.json(result);
   }
 
   /**
-   * Crear nueva categoria
+   * Crear nueva deuda
    * @param req
    * @param res
    */
-  async createCategory(req: Request, res: Response): Promise<Response> {
-    validation.createCategoryValidation(req.body);
+  async createDebt(req: Request, res: Response): Promise<Response> {
+    validation.createDebtValidation(req.body);
     const userId = req.user?.userId;
-    const result = await debtsService.createCategory(req.body, userId);
+    const result = await debtsService.createDebt(req.body, userId);
     return res.json(result);
   }
 
   /**
-   * Actualizar categoria
+   * Actualizar deuda
    * @param req
    * @param res
    */
-  async updateCategory(req: Request, res: Response): Promise<Response> {
-    const categoryId = req.params.id;
-    validation.updateTaskValidation({...req.body,categoryId});
-    const userId = req.user?.userId;
-    const result = await debtsService.updateCategory(req.body, categoryId, userId);
+  async updateDebt(req: Request, res: Response): Promise<Response> {
+    const debtId = req.params.id;
+    validation.updateDebtValidation({...req.body,debtId});
+    const result = await debtsService.updateDebt(req.body, debtId);
     return res.json(result);
   }
 
   /**
-   * Eliminar categoria
+   * Eliminar deuda
    * @param req
    * @param res
    */
-  async deleteCategory(req: Request, res: Response): Promise<Response> {
-    const categoryId = req.params.id;
-    validation.deleteTaskValidation({categoryId});
-    const userId = req.user?.userId;
-    const result = await debtsService.deleteCategory(categoryId, userId);
+  async deleteDebt(req: Request, res: Response): Promise<Response> {
+    const debtId = req.params.id;
+    validation.eliminarDebtValidation({debtId});
+    const result = await debtsService.deleteDebt(debtId);
     return res.json(result);
   }
 

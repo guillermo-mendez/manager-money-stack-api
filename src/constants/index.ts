@@ -1,8 +1,14 @@
-export const STATUSES = {
-  ACTIVE:{ id: 1, code: 'ACTIVE' }, // El recurso está activo
-  INACTIVE: { id: 2, code: 'INACTIVE' }, // El recurso está inactivo
-  DELETED: { id: 5, code: 'DELETED' }, // El recurso fue eliminado
+export const STATUS = {
+  ACTIVE: 'ACTIVE', // El recurso está activo
+  INACTIVE:'INACTIVE', // El recurso está inactivo
+  DELETED:'DELETED', // El recurso fue eliminado
+  PENDING: 'PENDING', // Pendiente de pago
+  PARTIALLY_PAID: 'PARTIALLY_PAID', // Parcialmente pagado
+  PAID: 'PAID', // Pagado
+  CANCELLED: 'CANCELLED', // Cancelado
+  DISPUTED: 'DISPUTED', // En disputa
 };
+
 
 export const ENDPOINTS_WITH_AUTHORIZATION = [
   '/api/auth/login',

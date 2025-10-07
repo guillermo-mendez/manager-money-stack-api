@@ -5,6 +5,9 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;     -- gen_random_uuid(), crypt()
 -- SEEDS: STATUS
 -- =========================
 INSERT INTO status (name) VALUES
+                              ('ACTIVE'),
+                              ('INACTIVE'),
+                              ('DELETED'),
                               ('PENDING'),
                               ('PARTIALLY_PAID'),
                               ('PAID'),

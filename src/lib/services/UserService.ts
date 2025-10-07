@@ -3,7 +3,7 @@ import {errorHandler, responseHandler} from 'error-handler-express-ts';
 import bcrypt from 'bcryptjs';
 import userRepository from '../repositories/UserRepository';
 import jwtService from '../../security/JWTService';
-import {BCRYPT_SALT_ROUNDS, STATUSES} from '../../constants';
+import {BCRYPT_SALT_ROUNDS, STATUS} from '../../constants';
 import {UserAuth, UserRegistration} from "../../entities/Authentication";
 
 class UserService {
